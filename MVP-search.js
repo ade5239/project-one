@@ -174,7 +174,8 @@ export class MVPsearch extends LitElement {
     // Additional meaningful information
     const readTime = metadata?.readtime ? `${metadata.readtime} min read` : ''; //read time
     const numImages = metadata?.images ? metadata.images.length : 0; //number of images on the site
-  
+    const numVideos = metadata?.videos ? metadata.videos.length : 0; // number of videos on the site
+
     return html` 
       <div class="card">
 
