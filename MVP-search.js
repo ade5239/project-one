@@ -4,7 +4,9 @@
  */
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
-//still need to import the icons
+import '@lrnwebcomponents/simple-icon/simple-icon.js';
+import '@lrnwebcomponents/simple-icon/lib/simple-icons.js';
+
 
 export class MVPsearch extends LitElement {
   static get properties() {
@@ -23,30 +25,29 @@ export class MVPsearch extends LitElement {
       }
 
       .overview {
-        padding: 16px;
-        border-radius: 8px;
-        margin-bottom: 16px;
-        color: #fff;
-        background-color: var(--overview-bg-color, #333);
+        padding: var(--ddd-spacing-4);
+        border-radius: var(--ddd-radius-md);
+        margin-bottom: var(--ddd-spacing-4);
+        color: var(--ddd-theme-default-slateMaxLight);
+        background-color: var(--ddd-theme-default-limestoneGray);
       }
 
       input {
         font-size: 20px;
         width: 80%;
-        padding: 8px;
-        margin-bottom: 10px;
+        padding: var(--ddd-spacing-2);
+        margin-bottom: var(--ddd-spacing-3);
       }
 
       button {
         font-size: 20px;
-        padding: 8px 24px;
+        padding: var(--ddd-spacing-2);
         cursor: pointer;
       }
 
       .results {
         display: grid;
         grid-template-columns: repeat(4, 1fr); //ensures a max of 4 cards go across the screen
-        gap: 16px;
       }
 
       @media screen and (max-width: 1200px) {
@@ -68,30 +69,35 @@ export class MVPsearch extends LitElement {
       }
 
       .card {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 16px;
+        border: var(--ddd-border-sm);
+        border-radius: var(--ddd-radius-md);
+        padding: var(--ddd-spacing-4);
         box-sizing: border-box;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        background-color: #fff;
+        background-color: var(--ddd-theme-default-slateMaxLight);
         text-decoration: none;
-        color: inherit;
+        color: var(--ddd-theme-default-coalyGray);
+      }
+
+      .card:hover {
+        transition: 0.2s ease, box-shadow 0.2s ease;
+        background-color: var(--ddd-theme-default-accent)
       }
 
       .card img {
         width: 100%;
         height: auto;
-        border-radius: 4px;
+        border-radius: var(--ddd-radius-md);
       }
 
       .card h3 {
         font-size: 1.2rem;
-        margin: 10px 0;
+        margin: var(--ddd-spacing-3);
       }
 
       .card p {
         font-size: 0.9rem;
-        color: #666;
+        color: var(--ddd-theme-default-coalyGray);
       }
 
       .card a {
@@ -101,7 +107,7 @@ export class MVPsearch extends LitElement {
 
       .card-links a {
         font-size: 0.9rem;
-        color: #0066cc;
+        color: var(--ddd-theme-default-beaverBlue);
         text-decoration: none;
       }
 
@@ -131,17 +137,28 @@ export class MVPsearch extends LitElement {
         <button @click="${this.search}">Analyze</button>
       </div>
 
-      <div class="overview" style="background-color: ${this.siteMetadata?.hexCode || '#333'};">
+      <div class="overview">
         ${this.siteMetadata
           ? html`
-              <h2>${this.siteMetadata.siteName}</h2>
-              <p>${this.siteMetadata.description}</p>
+              <h2>
+              ${this.siteMetadata.icon
+                ? html`
+                    <simple-icon
+                      icon="${this.siteMetadata.icon}"
+                      style="--simple-icon-width: 24px; --simple-icon-height: 24px;"
+                    ></simple-icon>
+                  `
+                : ''}
+              Name: ${this.siteMetadata.siteName}</h2>
+              <p>Description: ${this.siteMetadata.description}</p>
               ${this.siteMetadata.logo
                 ? html`<img src="${this.siteMetadata.logo}" alt="Site Logo" width="80" />`
                 : ''}
               <p>Theme: ${this.siteMetadata.theme}</p>
               <p>Created: ${this.siteMetadata.created}</p>
               <p>Last Updated: ${this.siteMetadata.lastUpdated}</p>
+              <p>HexCode: ${this.siteMetadata.hexCode}</p>
+
             `
           : html`<p>Enter a URL to analyze the site.</p>`
         }
@@ -230,34 +247,37 @@ export class MVPsearch extends LitElement {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch site.json'); //error handling if no site.json was found
       const data = await response.json();
-
+  
       if (data.metadata && data.items) { //checks the site.json for specific data
         const metadata = data.metadata;
         const siteData = metadata.site || {};
         const themeData = metadata.theme || {};
-
-        // extracts the theme name
+  
+        // Extracts the theme name
         const themeName = themeData.name || 'Default';
-
-        // extracts created and updated dates
+  
+        // Extracts created and updated dates
         const createdDate = siteData.created
           ? new Date(siteData.created * 1000).toLocaleDateString()
           : 'Unknown';
         const updatedDate = siteData.updated
           ? new Date(siteData.updated * 1000).toLocaleDateString()
           : 'Unknown';
-
-        // extracts hexCode from theme variables
-        const hexCode = themeData.variables?.hexCode || '#333';
-
+  
+        // Extracts hexCode and icon from theme variables
+        const themeVariables = themeData.variables || {};
+        const hexCode = themeVariables.hexCode || '#333';
+        const icon = themeVariables.icon || ''; // Extract the icon
+  
         this.siteMetadata = { //sets the metadata for the Overview section under the url
           siteName: siteData.name || 'Unknown Site',
-          description: data.description || 'No description available.',
+          description: siteData.description || 'No description available.',
           logo: siteData.logo ? this.resolveUrl(siteData.logo) : null,
           theme: themeName,
           created: createdDate,
           lastUpdated: updatedDate,
           hexCode: hexCode,
+          icon: icon,
         };
         this.items = data.items; //set items to display as cards
       } else {
@@ -270,6 +290,7 @@ export class MVPsearch extends LitElement {
       this.loading = false;
     }
   }
+  
 
   resolveUrl(path) { //helps resolve relative URLs
     if (!path) return '';
