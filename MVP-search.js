@@ -1,20 +1,15 @@
 /**
- * Copyright 2024 ade5239
+ * Copyright 2024
  * @license Apache-2.0, see LICENSE for full text.
  */
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
-import '@lrnwebcomponents/simple-icon/simple-icon.js';
-import '@lrnwebcomponents/simple-icon/lib/simple-icons.js';
+import './MVP-Image.js'; // Import the MVPImage component
 
-
-export class MVPsearch extends LitElement {
+export class MVPSearch extends LitElement {
   static get properties() {
     return {
-      items: { type: Array }, 
-      value: { type: String },
-      siteMetadata: { type: Object },
-      baseUrl: { type: String },
+      sanitizedUrl: { type: String },
     };
   }
 
@@ -24,280 +19,109 @@ export class MVPsearch extends LitElement {
         display: block;
       }
 
-      .overview {
-        padding: var(--ddd-spacing-4);
-        border-radius: var(--ddd-radius-md);
+      .header {
+        text-align: center;
         margin-bottom: var(--ddd-spacing-4);
-        color: var(--ddd-theme-default-slateMaxLight);
-        background-color: var(--ddd-theme-default-limestoneGray);
+      }
+
+      .search-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: var(--ddd-spacing-2);
       }
 
       input {
         font-size: 20px;
         width: 80%;
+        max-width: 400px;
         padding: var(--ddd-spacing-2);
-        margin-bottom: var(--ddd-spacing-3);
+        border-radius: var(--ddd-radius-md);
       }
 
       button {
         font-size: 20px;
         padding: var(--ddd-spacing-2);
+        border-radius: var(--ddd-radius-md);
         cursor: pointer;
       }
 
-      .results {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr); //ensures a max of 4 cards go across the screen
-      }
-
-      @media screen and (max-width: 1200px) {
-        .results {
-          grid-template-columns: repeat(3, 1fr);
-        }
-      }
-
-      @media screen and (max-width: 900px) {
-        .results {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-
-      @media screen and (max-width: 600px) {
-        .results {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      .card {
-        border: var(--ddd-border-sm);
-        border-radius: var(--ddd-radius-md);
-        padding: var(--ddd-spacing-4);
-        box-sizing: border-box;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        background-color: var(--ddd-theme-default-slateMaxLight);
-        text-decoration: none;
-        color: var(--ddd-theme-default-coalyGray);
-      }
-
-      .card:hover {
+      button:hover {
         transition: 0.2s ease, box-shadow 0.2s ease;
-        background-color: var(--ddd-theme-default-accent)
-      }
-
-      .card img {
-        width: 100%;
-        height: auto;
-        border-radius: var(--ddd-radius-md);
-      }
-
-      .card h3 {
-        font-size: 1.2rem;
-        margin: var(--ddd-spacing-3);
-      }
-
-      .card p {
-        font-size: 0.9rem;
-        color: var(--ddd-theme-default-coalyGray);
-      }
-
-      .card a {
-        text-decoration: none;
-        color: inherit;
-      }
-
-      .card-links a {
-        font-size: 0.9rem;
-        color: var(--ddd-theme-default-beaverBlue);
-        text-decoration: none;
-      }
-
-      .card-links a:hover {
-        text-decoration: underline;
+        background-color: var(--ddd-theme-default-accent);
       }
     `;
   }
 
-  constructor() { //initialize properties
+  constructor() {
     super();
-    this.value = '';
-    this.items = [];
-    this.siteMetadata = null;
-    this.baseUrl = '';
+    this.sanitizedUrl = '';
   }
 
   render() {
     return html`
-      <div>
+      <div class="header">
         <h1>Hax Site Analyzer</h1>
-        <input
-          id="input"
-          placeholder="Enter Site Location"
-          @keyup="${this.handleKeyUp}"
-        />
-        <button @click="${this.search}">Analyze</button>
-      </div>
-
-      <div class="overview">
-        ${this.siteMetadata
-          ? html`
-              <h2>
-              ${this.siteMetadata.icon
-                ? html`
-                    <simple-icon
-                      icon="${this.siteMetadata.icon}"
-                      style="--simple-icon-width: 24px; --simple-icon-height: 24px;"
-                    ></simple-icon>
-                  `
-                : ''}
-              Name: ${this.siteMetadata.siteName}</h2>
-              <p>Description: ${this.siteMetadata.description}</p>
-              ${this.siteMetadata.logo
-                ? html`<img src="${this.siteMetadata.logo}" alt="Site Logo" width="80" />`
-                : ''}
-              <p>Theme: ${this.siteMetadata.theme}</p>
-              <p>Created: ${this.siteMetadata.created}</p>
-              <p>Last Updated: ${this.siteMetadata.lastUpdated}</p>
-              <p>HexCode: ${this.siteMetadata.hexCode}</p>
-
-            `
-          : html`<p>Enter a URL to analyze the site.</p>`
-        }
-      </div>
-
-      ${this.items.length > 0
-        ? html`<p>Total Pages: ${this.items.length}</p>`
-        : ''}
-
-      <div class="results">
-        ${this.items.map((item) => this.renderCard(item))}
-      </div>
-    `;
-  }
-
-  renderCard(item) { //renders a card for each item
-    const { title, description, metadata, slug } = item;
-    const imagePath = //checks for any images available to use for the card
-      (metadata?.images && metadata.images[0]) ||
-      metadata?.image ||
-      this.siteMetadata?.logo ||
-      'https://via.placeholder.com/150';
-    const imageUrl = this.resolveUrl(imagePath);
-    const lastUpdated = metadata?.updated
-      ? new Date(metadata.updated * 1000).toLocaleDateString() //should convert the timestamp to actual date
-      : 'Unknown';
-    const pageUrl = this.resolveUrl(slug);
-    const sourceUrl = `${pageUrl}/index.html`;
-  
-    // Additional meaningful information
-    const readTime = metadata?.readtime ? `${metadata.readtime} min read` : ''; //read time
-    const numImages = metadata?.images ? metadata.images.length : 0; //number of images on the site
-    const numVideos = metadata?.videos ? metadata.videos.length : 0; // number of videos on the site
-
-    return html` 
-      <div class="card">
-
-        <a href="${pageUrl}" target="_blank" rel="noopener noreferrer">
-          <img src="${imageUrl}" alt="${title || 'Image'}" />
-          <h3>${title}</h3>
-        </a>
-
-        <p>${description}</p>
-        <p>Last updated: ${lastUpdated}</p>
-        ${readTime ? html`<p>${readTime}</p>` : ''}
-        ${numImages > 0 ? html`<p>Contains ${numImages} images</p>` : ''}
-        ${numVideos > 0 ? html`<p>Contains ${numVideos} videos</p>` : ''}
-
-        <div class="card-links">
-          <a href="${pageUrl}" target="_blank" rel="noopener noreferrer">Open Content</a>
-          <br />
-          <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer">Open Source</a>
+        <div class="search-container">
+          <input
+            id="input"
+            placeholder="Enter Site Location"
+            @keyup="${this.handleKeyUp}"
+          />
+          <button @click="${this.search}">Analyze</button>
         </div>
       </div>
+
+      ${this.sanitizedUrl
+        ? html`<mvp-image .url="${this.sanitizedUrl}"></mvp-image>`
+        : ''}
     `;
   }
-   
 
-  handleKeyUp(e) { //when the enter key is pressed in the input field it searches the input
-    if (e.key === 'Enter') { 
+  handleKeyUp(e) {
+    // When the enter key is pressed in the input field, it searches the input
+    if (e.key === 'Enter') {
       this.search();
     }
   }
 
-  search() { //ensures input validation and url standardization for provided url
+  search() {
+    // Ensures input validation and URL standardization for provided URL
     const inputValue = this.shadowRoot.querySelector('#input').value.trim();
-    if (!inputValue) { //input validation
+    if (!inputValue) {
+      // Input validation
       alert('Please enter a valid URL!');
       return;
     }
+
     let url = inputValue;
-    if (!url.endsWith('/')) { //checks if site.json exists in the provided url
+
+    // If the URL doesn't start with 'http://' or 'https://', prepend 'https://'
+    if (!/^https?:\/\//i.test(url)) {
+      url = 'https://' + url;
+    }
+
+    // Convert 'http://' to 'https://'
+    url = url.replace(/^http:\/\//i, 'https://');
+
+    // Remove any trailing 'site.json' if present
+    url = url.replace(/\/site\.json$/i, '/');
+
+    // Ensure the URL ends with a '/'
+    if (!url.endsWith('/')) {
       url += '/';
     }
-    if (!url.endsWith('site.json')) { //if the provided url does not have site.json, it adds site.json to the end of it
-      url += 'site.json';
-    }
-    const parsedUrl = new URL(url); //parses the url
-    this.baseUrl = `${parsedUrl.protocol}//${parsedUrl.host}/`; //takes the parsed url and sets a new base url
-    this.updateResults(url);
-  }
 
-  async updateResults(url) { // fetch and process data from the specified url
-    this.loading = true;
-    try { //tries to fetch the url's site.json
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch site.json'); //error handling if no site.json was found
-      const data = await response.json();
-  
-      if (data.metadata && data.items) { //checks the site.json for specific data
-        const metadata = data.metadata;
-        const siteData = metadata.site || {};
-        const themeData = metadata.theme || {};
-  
-        // Extracts the theme name
-        const themeName = themeData.name || 'Default';
-  
-        // Extracts created and updated dates
-        const createdDate = siteData.created
-          ? new Date(siteData.created * 1000).toLocaleDateString()
-          : 'Unknown';
-        const updatedDate = siteData.updated
-          ? new Date(siteData.updated * 1000).toLocaleDateString()
-          : 'Unknown';
-  
-        // Extracts hexCode and icon from theme variables
-        const themeVariables = themeData.variables || {};
-        const hexCode = themeVariables.hexCode || '#333';
-        const icon = themeVariables.icon || ''; // Extract the icon
-  
-        this.siteMetadata = { //sets the metadata for the Overview section under the url
-          siteName: siteData.name || 'Unknown Site',
-          description: siteData.description || 'No description available.',
-          logo: siteData.logo ? this.resolveUrl(siteData.logo) : null,
-          theme: themeName,
-          created: createdDate,
-          lastUpdated: updatedDate,
-          hexCode: hexCode,
-          icon: icon,
-        };
-        this.items = data.items; //set items to display as cards
-      } else {
-        throw new Error('Invalid site.json schema.');
-      }
+    // Append 'site.json' to the URL
+    url += 'site.json';
+
+    try {
+      const parsedUrl = new URL(url); // Parses the URL
+      this.sanitizedUrl = parsedUrl.href; // Set the sanitized URL
     } catch (error) {
-      this.items = [];
-      alert('Error: ' + error.message);
-    } finally {
-      this.loading = false;
+      alert('Invalid URL format!');
     }
-  }
-  
-
-  resolveUrl(path) { //helps resolve relative URLs
-    if (!path) return '';
-    return path.startsWith('http')
-      ? path
-      : `${this.baseUrl}${path.startsWith('/') ? path.slice(1) : path}`;
   }
 }
 
-globalThis.customElements.define('mvp-search', MVPsearch);
+customElements.define('mvp-search', MVPSearch);
