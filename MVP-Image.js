@@ -1,11 +1,9 @@
 /**
- * MVP-Image.js
  * Handles displaying the site overview and item cards.
  */
 
 import { LitElement, html, css } from "lit";
-//import '@lrnwebcomponents/simple-icon/simple-icon.js';
-//import '@lrnwebcomponents/simple-icon/lib/simple-icons.js';
+import '@haxtheweb/simple-icon/simple-icon.js';
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 
 export class MVPImage extends LitElement {
@@ -29,7 +27,6 @@ export class MVPImage extends LitElement {
         opacity: 0.1;
       }
 
-      /* Centering the overview content */
       .overview {
         max-width: 800px;
         margin: 0 auto;
@@ -39,9 +36,9 @@ export class MVPImage extends LitElement {
         color: var(--ddd-theme-default-slateMaxLight);
         background-color: var(--ddd-theme-default-limestoneGray);
         text-align: center;
+        border: var(--ddd-spacing-2) solid var(--site-hex-code, #333);
       }
 
-      /* Adjusted the results layout using Flexbox */
       .results {
         display: flex;
         flex-wrap: wrap;
@@ -49,7 +46,6 @@ export class MVPImage extends LitElement {
         margin: 0 auto;
       }
 
-      /* Style for the cards */
       .card {
         flex: 0 1 calc(25% - 40px); /* 4 cards per row */
         margin: 20px;
@@ -110,7 +106,6 @@ export class MVPImage extends LitElement {
         color: inherit;
       }
 
-      /* Styling the card links to be side by side */
       .card-links {
         display: flex;
         justify-content: center;
@@ -154,10 +149,9 @@ export class MVPImage extends LitElement {
 
   render() {
     return html`
-      <div class="overview">
+      <div class="overview" style="--site-hex-code: ${this.siteMetadata?.hexCode || '#333'};">
         ${this.siteMetadata
           ? html`
-              <!-- Moved the image to the top of the overview box -->
               ${this.siteMetadata.logo
                 ? html`<img src="${this.siteMetadata.logo}" alt="Site Logo" width="80" />`
                 : ''}
@@ -194,7 +188,7 @@ export class MVPImage extends LitElement {
 
   renderCard(item) {
     // Renders a card for each item
-    const { title, description, metadata, slug } = item;
+    const { title, description, metadata, slug, location } = item;
     const imagePath =
       (metadata?.images && metadata.images[0]) ||
       metadata?.image ||
@@ -205,7 +199,9 @@ export class MVPImage extends LitElement {
     const lastUpdated = metadata?.updated
       ? new Date(metadata.updated * 1000).toLocaleDateString() // Converts timestamp to date
       : 'Unknown';
-    const sourceUrl = `${pageUrl}/index.html`; // Corrected the source URL
+
+    // Use the item's specific location for the Open Source button
+    const sourceUrl = this.resolveUrl(location);
 
     // Additional meaningful information
     const readTime = metadata?.readtime ? `${metadata.readtime} min read` : ''; // Read time
@@ -219,7 +215,6 @@ export class MVPImage extends LitElement {
           <img src="${imageUrl}" alt="${title || 'Image'}" />
         </a>
 
-        <!-- Title with "open in new window" icon -->
         <a href="${pageUrl}" target="_blank" rel="noopener noreferrer">
           <h3>
             ${title}
@@ -236,7 +231,6 @@ export class MVPImage extends LitElement {
         ${numImages > 0 ? html`<p>Contains ${numImages} images</p>` : ''}
         ${numVideos > 0 ? html`<p>Contains ${numVideos} videos</p>` : ''}
 
-        <!-- Buttons side by side -->
         <div class="card-links">
           <a href="${pageUrl}" target="_blank" rel="noopener noreferrer">Open Content</a>
           <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer">Open Source</a>
@@ -251,7 +245,7 @@ export class MVPImage extends LitElement {
     try {
       // Try to fetch the URL's site.json
       const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch site.json'); // Error handling
+      if (!response.ok) throw new Error('Failed to fetch site.json'); // Error handling if invalid url is entered
       const data = await response.json();
 
       if (data.metadata && data.items) {
@@ -304,7 +298,7 @@ export class MVPImage extends LitElement {
     if (!path) return '';
     return path.startsWith('http')
       ? path
-      : `${this.baseUrl}/${path.startsWith('/') ? path.slice(1) : path}`;
+      : `${this.baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
   }
 }
 
