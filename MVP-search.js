@@ -1,10 +1,9 @@
 /**
- * Copyright 2024
- * @license Apache-2.0, see LICENSE for full text.
+  Handles search logic 
  */
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
-import './MVP-Image.js'; // Import the MVPImage component
+import './MVP-Image.js'; 
 
 export class MVPSearch extends LitElement {
   static get properties() {
@@ -79,45 +78,45 @@ export class MVPSearch extends LitElement {
   }
 
   handleKeyUp(e) {
-    // When the enter key is pressed in the input field, it searches the input
+    // when the enter key is pressed in the input field, it searches the input
     if (e.key === 'Enter') {
       this.search();
     }
   }
 
   search() {
-    // Ensures input validation and URL standardization for provided URL
+    // ensures input validation and URL standardization for  URL
     const inputValue = this.shadowRoot.querySelector('#input').value.trim();
     if (!inputValue) {
-      // Input validation
+      // input error handling
       alert('Please enter a valid URL!');
       return;
     }
 
     let url = inputValue;
 
-    // If the URL doesn't start with 'http://' or 'https://', prepend 'https://'
+    // If the URL doesn't start with 'http://' or 'https://', adds 'https://'
     if (!/^https?:\/\//i.test(url)) {
       url = 'https://' + url;
     }
 
-    // Convert 'http://' to 'https://'
+    // convert 'http://' to 'https://'
     url = url.replace(/^http:\/\//i, 'https://');
 
-    // Remove any trailing 'site.json' if present
+    // remove any trailing 'site.json' if present
     url = url.replace(/\/site\.json$/i, '/');
 
-    // Ensure the URL ends with a '/'
+    // ensure the URL ends with a '/'
     if (!url.endsWith('/')) {
       url += '/';
     }
 
-    // Append 'site.json' to the URL
+    // appends 'site.json' to the URL
     url += 'site.json';
 
     try {
-      const parsedUrl = new URL(url); // Parses the URL
-      this.sanitizedUrl = parsedUrl.href; // Set the sanitized URL
+      const parsedUrl = new URL(url); // parses the URL
+      this.sanitizedUrl = parsedUrl.href; // set the sanitized URL
     } catch (error) {
       alert('Invalid URL format!');
     }

@@ -28,7 +28,7 @@ export class MVPImage extends LitElement {
       }
 
       .overview {
-        max-width: 800px;
+        max-width: var(--ddd-spacing-75);
         margin: 0 auto;
         padding: var(--ddd-spacing-4);
         border-radius: var(--ddd-radius-xl);
@@ -48,7 +48,7 @@ export class MVPImage extends LitElement {
 
       .card {
         flex: 0 1 calc(25% - 40px); /* 4 cards per row */
-        margin: 20px;
+        margin: var(--ddd-spacing-5);
         border: var(--ddd-border-sm);
         border-radius: var(--ddd-radius-md);
         padding: var(--ddd-spacing-4);
@@ -139,17 +139,17 @@ export class MVPImage extends LitElement {
     this.loading = false;
   }
 
-  updated(changedProperties) {
+  updated(changedProperties) { //method called when properties change
     if (changedProperties.has('url') && this.url) {
       const parsedUrl = new URL(this.url);
-      this.baseUrl = `${parsedUrl.protocol}//${parsedUrl.host}`; // Removed trailing slash
+      this.baseUrl = `${parsedUrl.protocol}//${parsedUrl.host}`; 
       this.updateResults(this.url);
     }
   }
 
   render() {
     return html`
-      <div class="overview" style="--site-hex-code: ${this.siteMetadata?.hexCode || '#333'};">
+      <div class="overview" style="--site-hex-code: ${this.siteMetadata?.hexCode || '#333'};"> 
         ${this.siteMetadata
           ? html`
               ${this.siteMetadata.logo
@@ -189,13 +189,15 @@ export class MVPImage extends LitElement {
   renderCard(item) {
     // Renders a card for each item
     const { title, description, metadata, slug, location } = item;
-    const imagePath =
+    const imagePath = //determine image path from available or fallback options
       (metadata?.images && metadata.images[0]) ||
       metadata?.image ||
       this.siteMetadata?.logo ||
-      'https://via.placeholder.com/150';
+      'https://via.placeholder.com/150'; //placeholder image
+
     const imageUrl = this.resolveUrl(imagePath);
     const pageUrl = this.resolveUrl(slug);
+    //formats the date
     const lastUpdated = metadata?.updated
       ? new Date(metadata.updated * 1000).toLocaleDateString() // Converts timestamp to date
       : 'Unknown';
@@ -203,14 +205,13 @@ export class MVPImage extends LitElement {
     // Use the item's specific location for the Open Source button
     const sourceUrl = this.resolveUrl(location);
 
-    // Additional meaningful information
+    // Additional meaningful information from .json
     const readTime = metadata?.readtime ? `${metadata.readtime} min read` : ''; // Read time
     const numImages = metadata?.images ? metadata.images.length : 0; // Number of images
     const numVideos = metadata?.videos ? metadata.videos.length : 0; // Number of videos
 
     return html`
       <div class="card">
-        <!-- Image clickable and opens the image in a new window -->
         <a href="${imageUrl}" target="_blank" rel="noopener noreferrer">
           <img src="${imageUrl}" alt="${title || 'Image'}" />
         </a>
@@ -239,8 +240,8 @@ export class MVPImage extends LitElement {
     `;
   }
 
-  async updateResults(url) {
-    // Fetch and process data from the specified URL
+  async updateResults(url) {     // Fetch and process data from the specified URL
+
     this.loading = true;
     try {
       // Try to fetch the URL's site.json
@@ -249,7 +250,7 @@ export class MVPImage extends LitElement {
       const data = await response.json();
 
       if (data.metadata && data.items) {
-        // Checks the site.json for specific data
+        // extracts data from site.json 
         const metadata = data.metadata;
         const siteData = metadata.site || {};
         const themeData = metadata.theme || {};
